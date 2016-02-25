@@ -938,7 +938,7 @@ class Compiler
                     if ($key == 'class') {
                         $value = $this->createCode('echo (is_array(%1$s)) ? implode(" ", %1$s) : %1$s', $value);
                     } elseif (strpos($key, 'data-') !== false) {
-                        $value = $this->createCode('echo json_encode(%s)', $value);
+                        $value = $this->createCode('echo (is_array(%1$s) ? htmlentities(json_encode(%1$s)) : %1$s)', $value);
                     } else {
                         $value = $this->createCode('echo %s', $value);
                     }
