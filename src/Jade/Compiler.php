@@ -841,7 +841,7 @@ class Compiler
                     } else {
 
                         //новый код для isset
-                        if(!preg_match('/[&|^\(\)]/',$code)){
+                        if(!preg_match('/[&|^\(\)]/',$code) && !preg_match('/[=*]/', $code)){
                             $conditional = sprintf($conditional, $matches[1], 'isset(%s) && %s');
                             $this->buffer($this->createCode($conditional, $code, $code));
                         }else{
