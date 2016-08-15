@@ -14,6 +14,7 @@ class Compiler
     protected $terse        = false;
     protected $withinCase   = false;
     protected $indents      = 0;
+    protected $mixins       = array();
 
     protected $doctypes = array(
         '5'             => '<!DOCTYPE html>',
@@ -30,7 +31,7 @@ class Compiler
 
     protected $selfClosing  = array('meta', 'img', 'link', 'input', 'source', 'area', 'base', 'col', 'br', 'hr');
     protected $phpKeywords  = array('true','false','null','switch','case','default','endswitch','if','elseif','else','endif','while','endwhile','do','foreach','endforeach','for','endfor','as','unless');
-    protected $phpOpenBlock = array('switch','if','elseif','else','while','do','foreach','for','unless');
+    protected $phpOpenBlock = array('switch','if', 'else if', 'elseif','else','while','do','foreach','for','unless');
     protected $phpCloseBlock= array('endswitch','endif','endwhile','endforeach','endfor');
 
     public function __construct($prettyprint=false)
@@ -670,22 +671,26 @@ class Compiler
             $this->buffer($code);
 
         } else {
-            if ($arguments === null || empty($arguments)) {
-                $arguments = array();
-            } else
-            if (!is_array($arguments)) {
-                $arguments = array($arguments);
+            if(!in_array($name, $this->mixins)) {
+                $this->mixins[] = $name;
+
+                if ($arguments === null || empty($arguments)) {
+                    $arguments = array();
+                } else
+                if (!is_array($arguments)) {
+                    $arguments = array($arguments);
+                }
+
+                //TODO: assign nulls to all varargs for remove php warnings
+                array_unshift($arguments, 'attributes');
+                $code = $this->createCode("function {$name} (%s) {", implode(',',$arguments));
+
+                $this->buffer($code);
+                $this->indents++;
+                $this->visit($block);
+                $this->indents--;
+                $this->buffer($this->createCode('}'));
             }
-
-            //TODO: assign nulls to all varargs for remove php warnings
-            array_unshift($arguments, 'attributes');
-            $code = $this->createCode("function {$name} (%s) {", implode(',',$arguments));
-
-            $this->buffer($code);
-            $this->indents++;
-            $this->visit($block);
-            $this->indents--;
-            $this->buffer($this->createCode('}'));
         }
     }
 
@@ -836,7 +841,7 @@ class Compiler
                     } else {
 
                         //новый код для isset
-                        if(!preg_match('/[&|^\(\)]/',$code)){
+                        if(!preg_match('/[&|^\(\)]/',$code) && !preg_match('/[=*]/', $code)){
                             $conditional = sprintf($conditional, $matches[1], 'isset(%s) && %s');
                             $this->buffer($this->createCode($conditional, $code, $code));
                         }else{
@@ -933,7 +938,7 @@ class Compiler
                     if ($key == 'class') {
                         $value = $this->createCode('echo (is_array(%1$s)) ? implode(" ", %1$s) : %1$s', $value);
                     } elseif (strpos($key, 'data-') !== false) {
-                        $value = $this->createCode('echo json_encode(%s)', $value);
+                        $value = $this->createCode('echo (is_array(%1$s) ? htmlentities(json_encode(%1$s)) : %1$s)', $value);
                     } else {
                         $value = $this->createCode('echo %s', $value);
                     }
