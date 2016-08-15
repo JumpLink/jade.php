@@ -31,7 +31,7 @@ class Compiler
 
     protected $selfClosing  = array('meta', 'img', 'link', 'input', 'source', 'area', 'base', 'col', 'br', 'hr');
     protected $phpKeywords  = array('true','false','null','switch','case','default','endswitch','if','elseif','else','endif','while','endwhile','do','foreach','endforeach','for','endfor','as','unless');
-    protected $phpOpenBlock = array('switch','if','elseif','else','while','do','foreach','for','unless');
+    protected $phpOpenBlock = array('switch','if', 'else if', 'elseif','else','while','do','foreach','for','unless');
     protected $phpCloseBlock= array('endswitch','endif','endwhile','endforeach','endfor');
 
     public function __construct($prettyprint=false)
